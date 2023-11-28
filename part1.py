@@ -3,36 +3,37 @@ import xml.etree.ElementTree as ET
 import pandas as pd
 import gzip
 
-URL = (
-    "https://www.hackerrank.com/"  # Using hackerrank site to site the data scraping for
-)
+URL = "https://www.hackerrank.com/"
 
 
 class SitemapParser:
     def __init__(self, base_url):
         """
-        params:
-          base_url: url to parse the robots.txt data to retrieve the Sitemap data
-        return: None
+        Initialize the SitemapParser with a base URL.
+
+        Parameters:
+        - base_url (str): The base URL used to parse the robots.txt data to retrieve Sitemap data.
+
+        Returns:
+        - None
         """
         self.base_url = base_url
         self.sitemaps = []
 
     def fetch_robots_txt(self):
         """
-        params: None
-        return: str
+        Fetch the content of the robots.txt file for the specified URL.
+
+        Returns:
+        - str: The content of the robots.txt file.
         """
         robots_url = f"{self.base_url}/robots.txt"
-        # headers for the authentication purpose of the data
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
         }
         try:
-            # getting response of urL with help of requests module.
             response = requests.get(robots_url, headers=headers)
             response.raise_for_status()
-            # print(response.text)
             return response.text
         except requests.exceptions.RequestException as e:
             print(f"Error fetching robots.txt: {e}")
@@ -40,13 +41,16 @@ class SitemapParser:
 
     def extract_sitemaps(self, robots_content):
         """
-        params:
-            robots_content: content of the urL data
-        return: list of sitemaps urls
+        Extract sitemap URLs from the content of robots.txt.
+
+        Parameters:
+        - robots_content (str): The content of the robots.txt file.
+
+        Returns:
+        - list: A list of sitemap URLs.
         """
         sitemaps = []
         if robots_content:
-            # fetching the content of the sitemap for the urL only.
             lines = robots_content.split("\n")
             for line in lines:
                 if line.startswith("Sitemap:"):
@@ -56,19 +60,19 @@ class SitemapParser:
 
     def parse_sitemap(self, sitemap_url):
         """
-        params:
-          sitemap_urL: url content of the xmL data containing the sitemap for the hackerrank
-        return: list of contents urL's of the xmL data for the hackerrank
+        Parse the sitemap XML content for a given sitemap URL.
+
+        Parameters:
+        - sitemap_url (str): The URL of the sitemap XML.
+
+        Returns:
+        - list: A list of URLs extracted from the sitemap XML.
         """
         try:
-            # fetching the content of the urLs data using requests api
             response = requests.get(sitemap_url)
             response.raise_for_status()
-            # Decompress the gzip content
             decompressed_content = gzip.decompress(response.content).decode("utf-8")
-            # Parse XML content
             root = ET.fromstring(decompressed_content)
-            # Extract URLs
             urls = [
                 elem.text
                 for elem in root.findall(
@@ -82,8 +86,10 @@ class SitemapParser:
 
     def parse_all_sitemaps(self):
         """
-        params: None
-        return: data frame with list of urL's of the hackerrank sitemap xmL's data
+        Parse all sitemaps for the specified base URL and return the result in a DataFrame.
+
+        Returns:
+        - pandas.DataFrame: A DataFrame containing URLs from all parsed sitemaps.
         """
         robots_content = self.fetch_robots_txt()
         self.sitemaps = self.extract_sitemaps(robots_content)
@@ -95,7 +101,6 @@ class SitemapParser:
 
         df = pd.DataFrame(all_urls, columns=["URL"])
         return df
-        # return None
 
 
 # Example usage with a website
